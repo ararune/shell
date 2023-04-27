@@ -8,6 +8,9 @@
 #include "cd.h"
 #include "touch.h"
 #include "ls.h"
+#include "rm.h"
+#include "rmdir.h"
+#include "mkdir.h"
 
 
 int lsh_help(char **args);
@@ -21,7 +24,10 @@ char *builtin_str[] = {
   "help",
   "exit",
   "touch",
-  "ls"
+  "ls",
+  "rm",
+  "rmdir",
+  "mkdir"
 };
 
 int (*builtin_func[]) (char **) = {
@@ -29,7 +35,10 @@ int (*builtin_func[]) (char **) = {
   &lsh_help,
   &lsh_exit,
   &lsh_touch,
-  &lsh_ls
+  &lsh_ls,
+  &lsh_rm,
+  &lsh_rmdir,
+  &lsh_mkdir
 };
 
 int lsh_num_builtins() {
