@@ -1,191 +1,241 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <sys/wait.h>
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
-#include <dirent.h>
+#include "exit.h"
+#include "cd.h"
+#include "touch.h"
+#include "ls.h"
 
 
-#define MAX_COMMAND_LENGTH 100
+int lsh_help(char **args);
 
-void execute_command(char **args);
-void tokenize_command(char *command, char **args);
-void print_prompt();
 
-int main() {
-    char command[MAX_COMMAND_LENGTH];
-    char *args[10];
+/*
+  List of builtin commands, followed by their corresponding functions.
+ */
+char *builtin_str[] = {
+  "cd",
+  "help",
+  "exit",
+  "touch",
+  "ls"
+};
 
-    while(1) {
-        print_prompt();
+int (*builtin_func[]) (char **) = {
+  &lsh_cd,
+  &lsh_help,
+  &lsh_exit,
+  &lsh_touch,
+  &lsh_ls
+};
 
-        // Read the command from the user
-        fgets(command, MAX_COMMAND_LENGTH, stdin);
-
-        // Remove the newline character from the command
-        command[strcspn(command, "\n")] = 0;
-
-        // Tokenize the command into arguments
-        tokenize_command(command, args);
-
-        // Execute the command
-        execute_command(args);
-    }
-
-    return 0;
+int lsh_num_builtins() {
+  return sizeof(builtin_str) / sizeof(char *);
 }
 
-void print_prompt() {
-    printf("shell> ");
+/**
+   @brief Builtin command: print help.
+   @param args List of args.  Not examined.
+   @return Always returns 1, to continue executing.
+ */
+int lsh_help(char **args)
+{
+  int i;
+  printf("Stephen Brennan's LSH\n");
+  printf("Type program names and arguments, and hit enter.\n");
+  printf("The following are built in:\n");
+
+  for (i = 0; i < lsh_num_builtins(); i++) {
+    printf("  %s\n", builtin_str[i]);
+  }
+
+  printf("Use the man command for information on other programs.\n");
+  return 1;
 }
 
-void tokenize_command(char *command, char **args) {
-    char *token = strtok(command, " ");
-    int i = 0;
-    while(token != NULL) {
-        args[i] = token;
-        token = strtok(NULL, " ");
-        i++;
+
+int lsh_launch(char **args)
+{
+  pid_t pid;
+  int status;
+
+  pid = fork();
+  if (pid == 0) {
+    // Child process
+    if (execvp(args[0], args) == -1) {
+      perror("lsh");
     }
-    args[i] = NULL;
+    exit(EXIT_FAILURE);
+  } else if (pid < 0) {
+    // Error forking
+    perror("lsh");
+  } else {
+    // Parent process
+    do {
+      waitpid(pid, &status, WUNTRACED);
+    } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+  }
+
+  return 1;
 }
 
-void execute_command(char **args) {
-    if(args[0] == NULL) {
-        // Empty command, do nothing
-        return;
-    }
+/**
+   @brief Execute shell built-in or launch program.
+   @param args Null terminated list of arguments.
+   @return 1 if the shell should continue running, 0 if it should terminate
+ */
+int lsh_execute(char **args)
+{
+  int i;
 
-    if(strcmp(args[0], "ls") == 0) {
-        DIR *dir;
-        struct dirent *ent;
-        if((dir = opendir(".")) != NULL) {
-            while((ent = readdir(dir)) != NULL) {
-                printf("%s\n", ent->d_name);
-            }
-            closedir(dir);
-        }
-        else {
-            perror("ls error");
-        }
-    }
-    else if(strcmp(args[0], "pwd") == 0) {
-        char cwd[1024];
-        if(getcwd(cwd, sizeof(cwd)) != NULL) {
-            printf("%s\n", cwd);
-        }
-        else {
-            perror("pwd error");
-        }
-    }
-    else if(strcmp(args[0], "touch") == 0) {
-        if(args[1] == NULL) {
-            printf("Usage: touch <filename>\n");
-        }
-        else {
-            int fd = open(args[1], O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
-            if(fd == -1) {
-                perror("touch error");
-            }
-            else {
-                close(fd);
-            }
-        }
-    }
-    else if(strcmp(args[0], "rm") == 0) {
-        if(args[1] == NULL) {
-            printf("Usage: rm <filename>\n");
-        }
-        else {
-            if(remove(args[1]) == 0) {
-                printf("%s removed successfully\n", args[1]);
-            }
-            else {
-                perror("rm error");
-            }
-        }
-    }
-    else if(strcmp(args[0], "mkdir") == 0) {
-        if(args[1] == NULL) {
-            printf("Usage: mkdir <dirname>\n");
-        }
-        else {
-            if(mkdir(args[1], S_IRWXU | S_IRWXG | S_IRWXO) == -1) {
-                perror("mkdir error");
-            }
-            else {
-                printf("%s created successfully\n", args[1]);
-            }
-        }
-    }
-     else if(strcmp(args[0], "rmdir") == 0) {
-        if(args[1] == NULL) {
-            printf("Usage: rmdir <directory>\n");
-        }
-        else {
-            if(rmdir(args[1]) == -1) {
-                perror("rmdir error");
-            }
-        }
-    }
-    else if(strcmp(args[0], "wc") == 0) {
-        if(args[1] == NULL) {
-            printf("Usage: wc [-wcl] <filename>\n");
-        }
-        else {
-            int word_count = 0;
-            int char_count = 0;
-            int line_count = 0;
-            int file_descriptor;
+  if (args[0] == NULL) {
+    // An empty command was entered.
+    return 1;
+  }
 
-            if((file_descriptor = open(args[2], O_RDONLY)) < 0) {
-                perror("wc error");
-            }
-            else {
-                char buffer;
-                int in_word = 0;
-
-                while(read(file_descriptor, &buffer, 1) > 0) {
-                    char_count++;
-                    if(buffer == ' ' || buffer == '\n' || buffer == '\t') {
-                        if(in_word) {
-                            in_word = 0;
-                            word_count++;
-                        }
-                        if(buffer == '\n') {
-                            line_count++;
-                        }
-                    }
-                    else {
-                        in_word = 1;
-                    }
-                }
-
-                if(in_word) {
-                    word_count++;
-                }
-
-                close(file_descriptor);
-
-                if(strstr(args[1], "-w") != NULL) {
-                    printf("Word count: %d\n", word_count);
-                }
-                if(strstr(args[1], "-c") != NULL) {
-                    printf("Character count: %d\n", char_count);
-                }
-                if(strstr(args[1], "-l") != NULL) {
-                    printf("Line count: %d\n", line_count);
-                }
-            }
-        }
+  for (i = 0; i < lsh_num_builtins(); i++) {
+    if (strcmp(args[0], builtin_str[i]) == 0) {
+      return (*builtin_func[i])(args);
     }
-    else if(strcmp(args[0], "exit") == 0) {
-        exit(0);
-    }
-    else {
-        printf("Unknown command: %s\n", args[0]);
-    }
+  }
+
+  return lsh_launch(args);
 }
 
+/**
+   @brief Read a line of input from stdin.
+   @return The line from stdin.
+ */
+char *lsh_read_line(void)
+{
+#ifdef LSH_USE_STD_GETLINE
+  char *line = NULL;
+  ssize_t bufsize = 0; // have getline allocate a buffer for us
+  if (getline(&line, &bufsize, stdin) == -1) {
+    if (feof(stdin)) {
+      exit(EXIT_SUCCESS);  // We received an EOF
+    } else  {
+      perror("lsh: getline\n");
+      exit(EXIT_FAILURE);
+    }
+  }
+  return line;
+#else
+#define LSH_RL_BUFSIZE 1024
+  int bufsize = LSH_RL_BUFSIZE;
+  int position = 0;
+  char *buffer = malloc(sizeof(char) * bufsize);
+  int c;
+
+  if (!buffer) {
+    fprintf(stderr, "lsh: allocation error\n");
+    exit(EXIT_FAILURE);
+  }
+
+  while (1) {
+    // Read a character
+    c = getchar();
+
+    if (c == EOF) {
+      exit(EXIT_SUCCESS);
+    } else if (c == '\n') {
+      buffer[position] = '\0';
+      return buffer;
+    } else {
+      buffer[position] = c;
+    }
+    position++;
+
+    // If we have exceeded the buffer, reallocate.
+    if (position >= bufsize) {
+      bufsize += LSH_RL_BUFSIZE;
+      buffer = realloc(buffer, bufsize);
+      if (!buffer) {
+        fprintf(stderr, "lsh: allocation error\n");
+        exit(EXIT_FAILURE);
+      }
+    }
+  }
+#endif
+}
+
+#define LSH_TOK_BUFSIZE 64
+#define LSH_TOK_DELIM " \t\r\n\a"
+/**
+   @brief Split a line into tokens (very naively).
+   @param line The line.
+   @return Null-terminated array of tokens.
+ */
+char **lsh_split_line(char *line)
+{
+  int bufsize = LSH_TOK_BUFSIZE, position = 0;
+  char **tokens = malloc(bufsize * sizeof(char*));
+  char *token, **tokens_backup;
+
+  if (!tokens) {
+    fprintf(stderr, "lsh: allocation error\n");
+    exit(EXIT_FAILURE);
+  }
+
+  token = strtok(line, LSH_TOK_DELIM);
+  while (token != NULL) {
+    tokens[position] = token;
+    position++;
+
+    if (position >= bufsize) {
+      bufsize += LSH_TOK_BUFSIZE;
+      tokens_backup = tokens;
+      tokens = realloc(tokens, bufsize * sizeof(char*));
+      if (!tokens) {
+		free(tokens_backup);
+        fprintf(stderr, "lsh: allocation error\n");
+        exit(EXIT_FAILURE);
+      }
+    }
+
+    token = strtok(NULL, LSH_TOK_DELIM);
+  }
+  tokens[position] = NULL;
+  return tokens;
+}
+
+/**
+   @brief Loop getting input and executing it.
+ */
+void lsh_loop(void)
+{
+  char *line;
+  char **args;
+  int status;
+
+  do {
+    printf("> ");
+    line = lsh_read_line();
+    args = lsh_split_line(line);
+    status = lsh_execute(args);
+
+    free(line);
+    free(args);
+  } while (status);
+}
+
+/**
+   @brief Main entry point.
+   @param argc Argument count.
+   @param argv Argument vector.
+   @return status code
+ */
+int main(int argc, char **argv)
+{
+  // Load config files, if any.
+
+  // Run command loop.
+  lsh_loop();
+
+  // Perform any shutdown/cleanup.
+
+  return EXIT_SUCCESS;
+}
