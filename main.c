@@ -221,7 +221,13 @@ void lsh_loop(void)
   int status;
 
   do {
-    printf("> ");
+    char cwd[1024];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+      printf("\033[0;32m%s\033[0m:\033[0;35m%s\033[0m$ ", getenv("USER"), cwd);
+    } else {
+      perror("getcwd() error");
+      printf("$ ");
+    }
     line = lsh_read_line();
     args = lsh_split_line(line);
     status = lsh_execute(args);
@@ -230,6 +236,9 @@ void lsh_loop(void)
     free(args);
   } while (status);
 }
+
+
+
 
 /**
    @brief Main entry point.
