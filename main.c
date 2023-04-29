@@ -14,6 +14,15 @@
 #include "cdir.h"
 #include "find.h"
 
+#define LSH_TOK_BUFSIZE 64
+#define LSH_TOK_DELIM " \t\r\n\a"
+
+#define PURPLE "\033[1;34m"
+#define MAGENTA "\033[1;31m"
+
+
+#define WHITE "\033[0m"
+
 int lsh_help(char **args);
 
 char *builtin_str[] = {
@@ -158,31 +167,29 @@ char *lsh_read_line(void)
 #endif
 }
 
-#define LSH_TOK_BUFSIZE 64
-#define LSH_TOK_DELIM " \t\r\n\a"
 
-char **lsh_split_line(char *line)
-{
-  int bufsize = LSH_TOK_BUFSIZE, position = 0;
+char **lsh_split_line(char *line) {
+  int bufsize = LSH_TOK_BUFSIZE;
+  int position = 0;
   char **tokens = malloc(bufsize * sizeof(char*));
-  char *token, **tokens_backup;
+  char *token = NULL;
+  char **tokens_backup = NULL;
 
-  if (!tokens) {
+  if (tokens == NULL) {
     fprintf(stderr, "lsh: allocation error\n");
     exit(EXIT_FAILURE);
   }
 
   token = strtok(line, LSH_TOK_DELIM);
   while (token != NULL) {
-    tokens[position] = token;
-    position++;
+    tokens[position++] = token;
 
     if (position >= bufsize) {
       bufsize += LSH_TOK_BUFSIZE;
       tokens_backup = tokens;
       tokens = realloc(tokens, bufsize * sizeof(char*));
-      if (!tokens) {
-		free(tokens_backup);
+      if (tokens == NULL) {
+        free(tokens_backup);
         fprintf(stderr, "lsh: allocation error\n");
         exit(EXIT_FAILURE);
       }
@@ -190,6 +197,7 @@ char **lsh_split_line(char *line)
 
     token = strtok(NULL, LSH_TOK_DELIM);
   }
+
   tokens[position] = NULL;
   return tokens;
 }
@@ -203,7 +211,7 @@ void lsh_loop(void)
   do {
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
-      printf("\033[0;32m%s\033[0m:\033[0;35m%s\033[0m$ ", getenv("USER"), cwd);
+      printf("%s%s%s:%s%s%s$ ", PURPLE, getenv("USER"), WHITE, MAGENTA, cwd, WHITE);
     } else {
       perror("getcwd() error");
       printf("$ ");

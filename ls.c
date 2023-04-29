@@ -9,8 +9,9 @@
 #include <unistd.h>
 #include "ls.h"
 
-#define COLOR_DIR "\033[38;5;39m"  // Blue
+#define COLOR_DIR "\033[1;36m"  // Cyan
 #define COLOR_FILE "\033[0m"  // Reset color
+#define COLOR_EXEC "\033[1;33m"  // Yellow
 
 void print_permissions(mode_t mode) {
   printf((mode & S_IRUSR) ? "r" : "-");
@@ -66,9 +67,12 @@ int lsh_ls(char **args) {
       }
       if (entries[i]->d_type == DT_DIR) {
         printf(COLOR_DIR "%s  " COLOR_FILE, entries[i]->d_name);
+      } else if (access(entries[i]->d_name, X_OK) == 0) {
+        printf(COLOR_EXEC "%s  " COLOR_FILE, entries[i]->d_name);
       } else {
         printf("%s  ", entries[i]->d_name);
       }
+
       if (show_permissions) {
         printf("\n");
       }
