@@ -1,8 +1,9 @@
 #include <dirent.h>
+#include <fnmatch.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fnmatch.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -10,12 +11,6 @@
 
 #define COLOR_DIR "\033[38;5;39m"  // Blue
 #define COLOR_FILE "\033[0m"  // Reset color
-
-int compare_names(const void *a, const void *b) {
-  const struct dirent **entry1 = (const struct dirent **)a;
-  const struct dirent **entry2 = (const struct dirent **)b;
-  return strcmp((*entry1)->d_name, (*entry2)->d_name);
-}
 
 void print_permissions(mode_t mode) {
   printf((mode & S_IRUSR) ? "r" : "-");
@@ -30,20 +25,20 @@ void print_permissions(mode_t mode) {
 }
 
 int lsh_ls(char **args) {
+  bool show_hidden = false;
+  bool show_permissions = false;
+  char *pattern = "*";
   DIR *dir;
   struct dirent **entries;
   struct stat filestat;
-  char *pattern = "*";
   int num_entries;
-  int show_hidden = 0;
-  int show_permissions = 0;
 
   for (int i = 1; args[i] != NULL; i++) {
     if (strcmp(args[i], "-a") == 0 || strcmp(args[i], "-al") == 0 || strcmp(args[i], "-la") == 0) {
-      show_hidden = 1;
+      show_hidden = true;
     }
     if (strcmp(args[i], "-l") == 0 || strcmp(args[i], "-al") == 0 || strcmp(args[i], "-la") == 0) {
-      show_permissions = 1;
+      show_permissions = true;
     }
     if (args[i][0] != '-') {
       pattern = args[i];
@@ -55,9 +50,10 @@ int lsh_ls(char **args) {
     perror("lsh");
     return 1;
   }
+
   for (int i = 0; i < num_entries; i++) {
     if (!show_hidden && entries[i]->d_name[0] == '.') {
-      continue; // skip over hidden files and directories
+      continue;
     }
     if (fnmatch(pattern, entries[i]->d_name, FNM_PATHNAME) == 0) {
       if (show_permissions) {
@@ -78,12 +74,15 @@ int lsh_ls(char **args) {
       }
     }
   }
+
   printf("\n");
 
   for (int i = 0; i < num_entries; i++) {
     free(entries[i]);
   }
+
   free(entries);
+
   return 1;
 }
 

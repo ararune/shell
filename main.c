@@ -12,7 +12,7 @@
 #include "rmdir.h"
 #include "mkdir.h"
 #include "cdir.h"
-
+#include "find.h"
 
 int lsh_help(char **args);
 
@@ -25,7 +25,8 @@ char *builtin_str[] = {
   "rm",
   "rmdir",
   "mkdir",
-  "cdir"
+  "cdir",
+  "find"
 };
 
 int (*builtin_func[]) (char **) = {
@@ -37,7 +38,8 @@ int (*builtin_func[]) (char **) = {
   &lsh_rm,
   &lsh_rmdir,
   &lsh_mkdir,
-  &lsh_cdir
+  &lsh_cdir,
+  &lsh_find
 };
 
 int lsh_num_builtins() {
