@@ -13,14 +13,13 @@
 #include "mkdir.h"
 #include "cdir.h"
 #include "find.h"
+#include "fetch.h"
 
 #define LSH_TOK_BUFSIZE 64
 #define LSH_TOK_DELIM " \t\r\n\a"
 
 #define PURPLE "\033[1;34m"
 #define MAGENTA "\033[1;31m"
-
-
 #define WHITE "\033[0m"
 
 int lsh_help(char **args);
@@ -35,7 +34,8 @@ char *builtin_str[] = {
   "rmdir",
   "mkdir",
   "cdir",
-  "find"
+  "find",
+  "fetch"
 };
 
 int (*builtin_func[]) (char **) = {
@@ -48,7 +48,8 @@ int (*builtin_func[]) (char **) = {
   &lsh_rmdir,
   &lsh_mkdir,
   &lsh_cdir,
-  &lsh_find
+  &lsh_find,
+  &lsh_fetch
 };
 
 int lsh_num_builtins() {
