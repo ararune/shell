@@ -10,7 +10,8 @@ This is a simple shell program written in C. It supports basic shell commands su
 
 ## Getting Started
 
-To compile the program, run the following command:
+To compile and run the shell program, you need to have a C compiler installed on your system, such as `gcc`.
+Navigate to the root directory of the project in your terminal and run the following command : 
 
 ```bash
 gcc -o shell *.c
@@ -38,5 +39,5 @@ The shell supports the following commands:
 -   `rmdir <directory>` - Delete the directory with the name `directory`
 -   `mkdir <directory>` - Create a new empty directory with the name `directory`
 -   `cdir <directory>` - Create a new empty `directory` and change the current working `directory`
--   `find <file\directory>` - List full path of `file` and `directory`, search from `home`
+-   `find <file|directory>` - List full path of `file` or `directory`,  searching from the home directory
 -   `fetch` - Display system information
