@@ -12,7 +12,7 @@ This is a simple shell program written in C. It supports basic shell commands su
 To compile the program, run the following command:
 
 ```bash
-gcc -o shell *.c*
+gcc -o shell *.c
 ```
 
 Then, to start the shell, run the following command:
