@@ -8,10 +8,12 @@
 int lsh_cdir(char **args) {
   if (mkdir(args[1], 0777) == -1) {
     perror("lsh");
-  } else {
-    if (chdir(args[1]) == -1) {
-      perror("lsh");
-    }
+    return 1;
+  } 
+  else if (chdir(args[1]) == -1) {
+    perror("lsh");
+    return 1;
   }
   return 1;
 }
+
