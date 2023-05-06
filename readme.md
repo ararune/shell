@@ -32,15 +32,6 @@ Alternatively, simply run the pre-built script to compile and run the shell :
 
 The shell supports the following commands:
 
--   `cd <directory>` - Change the current working directory to `directory`
--   `ls` - List the contents of the current working directory
--   `touch <file>` - Create a new empty file with the name `file`
--   `rm <file>` - Delete the file with the name `file`
--   `rmdir <directory>` - Delete the directory with the name `directory`
--   `mkdir <directory>` - Create a new empty directory with the name `directory`
--   `cdir <directory>` - Create a new empty `directory` and change the current working `directory`
--   `find <file|directory>` - List full path of `file` or `directory`,  searching from the home directory
--   `fetch` - Display system information
 
 | Command             | Description                                                         |
 |---------------------|---------------------------------------------------------------------|
