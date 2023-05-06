@@ -1,3 +1,4 @@
+## Linux Shell
 
 This is a simple shell program written in C. It supports basic shell commands such as `cd`, `ls`, `touch`, `rm`, `rmdir`, `mkdir`, `find`, `fetch`, and `exit`.
 
