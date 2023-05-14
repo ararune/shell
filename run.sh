@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # Compile the shell program
-gcc -o shell *.c
+make
+make clean
 
 # Run the shell program
-./shell
+./main
 
