@@ -14,18 +14,18 @@ To compile and run the shell program, you need to have a C compiler installed on
 Navigate to the root directory of the project in your terminal and run the following command : 
 
 ```bash
-gcc -o shell *.c
+make
 ```
 
 Then, to start the shell, run the following command:
 ```bash
-./shell
+./main
 ```
 
-Alternatively, simply run the pre-built script to compile and run the shell :
+When you are done using the shell, you can clean up the compiled files by running the following command:
 
 ```bash
-./run.sh
+make clean
 ```
 
 ## Usage
