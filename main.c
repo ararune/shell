@@ -230,6 +230,7 @@ int main(int argc, char **argv)
 {
   // Load config files, if any.
 
+  lsh_fetch(argv);
   // Run command loop.
   lsh_loop();
 

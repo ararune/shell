@@ -6,7 +6,8 @@
 #include "cdir.h"
 
 int lsh_cdir(char **args) {
-  if (mkdir(args[1], 0777) == -1) {
+  mode_t mode = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+  if (mkdir(args[1], mode) == -1) {
     perror("lsh");
     return 1;
   } 
