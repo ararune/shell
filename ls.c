@@ -29,7 +29,6 @@ int lsh_ls(char **args) {
   bool show_hidden = false;
   bool show_permissions = false;
   char *pattern = "*";
-  DIR *dir;
   struct dirent **entries;
   struct stat filestat;
   int num_entries;
