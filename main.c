@@ -203,20 +203,23 @@ char **lsh_split_line(char *line) {
   return tokens;
 }
 
-void lsh_loop(void)
-{
+void lsh_print_prompt(void) {
+  char cwd[1024];
+  if (getcwd(cwd, sizeof(cwd)) != NULL) {
+    printf("%s%s%s:%s%s%s$ ", PURPLE, getenv("USER"), WHITE, MAGENTA, cwd, WHITE);
+  } else {
+    perror("getcwd() error");
+    printf("$ ");
+  }
+}
+
+void lsh_loop(void) {
   char *line;
   char **args;
   int status;
 
   do {
-    char cwd[1024];
-    if (getcwd(cwd, sizeof(cwd)) != NULL) {
-      printf("%s%s%s:%s%s%s$ ", PURPLE, getenv("USER"), WHITE, MAGENTA, cwd, WHITE);
-    } else {
-      perror("getcwd() error");
-      printf("$ ");
-    }
+    lsh_print_prompt();
     line = lsh_read_line();
     args = lsh_split_line(line);
     status = lsh_execute(args);
@@ -226,10 +229,12 @@ void lsh_loop(void)
   } while (status);
 }
 
+
 int main(int argc, char **argv)
 {
   // Load config files, if any.
-
+  lsh_print_prompt();
+  printf("\n");
   lsh_fetch(argv);
   // Run command loop.
   lsh_loop();
