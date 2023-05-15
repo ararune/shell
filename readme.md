@@ -42,6 +42,6 @@ The shell supports the following commands:
 | `rmdir <directory>` | Delete the directory with the name `directory`                       |
 | `mkdir <directory>` | Create a new empty directory with the name `directory`               |
 | `cdir <directory>`  | Create a new empty `directory` and change the current working `directory` |
-| `find <file|directory>` | List full path of `file` and `directory`, search from `home`         |
+| `find <file\directory>` | List full path of `file` and `directory`, search from `home`         |
 | `fetch`             | Display system information                                           |
 
